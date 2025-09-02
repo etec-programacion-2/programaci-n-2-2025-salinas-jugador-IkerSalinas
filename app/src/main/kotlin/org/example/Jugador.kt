@@ -1,5 +1,4 @@
 package org.example
-
 import javafx.geometry.Pos
 import javafx.scene.Scene
 import javafx.scene.control.*
@@ -30,18 +29,18 @@ class Jugador {
             val posicion = comboPosicion.value
             val numero = inputNumero.text
 
-            val alerta = Alert(Alert.AlertType.INFORMATION)
-            alerta.title = "Jugador creado"
-            alerta.headerText = null
-
-            // Verificamos que haya datos
             if (nombre.isNullOrBlank() || posicion == null || numero.isNullOrBlank()) {
+                val alerta = Alert(Alert.AlertType.WARNING)
+                alerta.title = "Campos incompletos"
+                alerta.headerText = null
                 alerta.contentText = "Por favor complete todos los campos."
+                alerta.showAndWait()
             } else {
-                alerta.contentText = "Jugador: $nombre\nPosición: $posicion\nNúmero: $numero\n\nPróximamente..."
+                // Cerrar ventana actual
+                stage.close()
+                // Abrir simulador con los datos ingresados
+                Simulador(nombre, posicion, numero).mostrar()
             }
-
-            alerta.showAndWait()
         }
 
         // Layout
