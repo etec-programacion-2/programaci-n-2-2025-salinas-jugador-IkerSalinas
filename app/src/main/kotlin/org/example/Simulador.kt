@@ -80,8 +80,43 @@ class Simulador(
             labelTemporada.text = "Temporada: ${formatoTemporada()}"
             labelStats.text = statsTexto()
             labelPuesto.text = "Puesto: $puesto"
+        }
+        val botonEquipo = Button("Cambiar de equipo")
+        botonEquipo.setOnAction {
+            val ofertas = generarOfertas()
 
+            if (ofertas.isEmpty()) {
+                val alerta = Alert(Alert.AlertType.WARNING)
+                alerta.title = "Sin ofertas"
+                alerta.headerText = null
+                alerta.contentText = "No has recibido ofertas esta temporada."
+                alerta.showAndWait()
+                return@setOnAction
+            }
 
+            // Crear ChoiceDialog para elegir equipo
+            val dialog = javafx.scene.control.ChoiceDialog(ofertas[0], ofertas)
+            dialog.title = "Ofertas de equipos"
+            dialog.headerText = "Elige tu nuevo equipo"
+            dialog.contentText = "Ofertas disponibles:"
+
+            val resultado = dialog.showAndWait()
+            if (resultado.isPresent) {
+                val nuevoEquipo = resultado.get()
+                equipo = nuevoEquipo
+
+                // Buscar en qué liga está
+                for ((ligaNombre, categorias) in Ligas.ligas) {
+                    for ((_, listaEquipos) in categorias) {
+                        if (nuevoEquipo in listaEquipos) {
+                            liga = ligaNombre
+                        }
+                    }
+                }
+
+                // Actualizar label
+                labelEquipo.text = "Equipo: $equipo | Liga: $liga"
+            }
         }
 
         val root = VBox(
@@ -89,7 +124,7 @@ class Simulador(
             labelNombre, labelPosicion, labelNumero,
             labelValor, labelEdad, labelTemporada,
             labelStats, labelEquipo, labelPuesto,
-            boton
+            boton, botonEquipo
         )
         root.alignment = Pos.CENTER
 
@@ -97,14 +132,16 @@ class Simulador(
         stage.title = "Simulador de Carrera"
         stage.scene = scene
         stage.show()
+
+
     }
 
     private fun generarEstadisticas() {
-        partidos = Random.nextInt(10, 70)
+        partidos = Random.nextInt(10, 60)
 
         when (posicion.lowercase()) {
             "delantero" -> {
-                goles = Random.nextInt(0, 70)
+                goles = Random.nextInt(0, 50)
                 asistencias = Random.nextInt(0, 30)
                 amarillas = Random.nextInt(0, 10)
                 rojas = Random.nextInt(0, 4)
@@ -112,22 +149,48 @@ class Simulador(
             "medio" -> {
                 goles = Random.nextInt(0, 30)
                 asistencias = Random.nextInt(0, 50)
-                amarillas = Random.nextInt(0, 10)
-                rojas = Random.nextInt(0, 4)
+                amarillas = Random.nextInt(0, 12)
+                rojas = Random.nextInt(0, 6)
             }
             "defensa" -> {
                 goles = Random.nextInt(0, 20)
-                asistencias = Random.nextInt(0,20)
-                amarillas = Random.nextInt(0,15)
-                rojas = Random.nextInt(0, 6)
+                asistencias = Random.nextInt(0, 20)
+                amarillas = Random.nextInt(0, 16)
+                rojas = Random.nextInt(0, 8)
             }
             "arquero" -> {
                 goles = if (Random.nextInt(0, 100) < 2) 1 else 0
-                asistencias = Random.nextInt(0, 3)
-                amarillas = Random.nextInt(0, 4)
-                rojas = Random.nextInt(0, 2)
+                asistencias = Random.nextInt(0, 10)
+                amarillas = Random.nextInt(0, 13)
+                rojas = Random.nextInt(0, 4)
             }
         }
+
+        // influencia del equipo
+        when (equipo) {
+            in Equipos.gigantes -> {
+                goles = (goles * 1.5).toInt()
+                asistencias = (asistencias * 1.5).toInt()
+                amarillas = (amarillas * 0.6).toInt()
+            }
+            in Equipos.grandes -> {
+                goles = (goles * 1.3).toInt()
+                asistencias = (asistencias * 1.3).toInt()
+                amarillas = (amarillas * 0.8).toInt()
+            }
+            in Equipos.normales -> {
+                goles = (goles * 1.1).toInt()
+                asistencias = (asistencias * 1.1).toInt()
+                amarillas = (amarillas * 1.1).toInt()
+            }
+            in Equipos.mediocres -> {
+                goles = (goles * 0.8).toInt()
+                asistencias = (asistencias * 0.8).toInt()
+                amarillas = (amarillas * 1.3).toInt()
+            }
+            // si no está en ninguna de esas categorías no modificamos nada
+        }
+
 
         puesto = when (Random.nextInt(0, 100)) {
             in 0..70 -> "Titular"
@@ -135,6 +198,7 @@ class Simulador(
             else -> "Reserva"
         }
     }
+
 
     private fun calcularValor() {
         // base depende de partidos jugados
@@ -175,5 +239,28 @@ class Simulador(
         val siguiente = inicioTemporada + 1
         return "$inicioTemporada/$siguiente"
     }
+    private fun generarOfertas(): List<String> {
+        val ofertas = mutableListOf<String>()
+
+        // rendimiento alto
+        if (goles > 20 || asistencias > 20 || valorMercado > 8_000_000) {
+            ofertas.addAll(Equipos.gigantes.shuffled().take(2))
+        }
+        // rendimiento medio
+        else if (goles > 15 || asistencias > 15) {
+            ofertas.addAll(Equipos.grandes.shuffled().take(2))
+        }
+        else if (goles > 8 || asistencias > 8) {
+            ofertas.addAll(Equipos.normales.shuffled().take(2))
+        }
+        // flojo
+        else {
+            ofertas.addAll(Equipos.mediocres.shuffled().take(2))
+        }
+
+        return ofertas
+    }
+
+
 }
 
