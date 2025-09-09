@@ -5,7 +5,7 @@ object Ligas {
         "Liga Argentina" to mapOf(
             "Gigantes" to listOf("Boca Juniors", "River Plate"),
             "Grandes" to listOf("Racing Club", "Independiente"),
-            "Normales" to listOf("San Lorenzo", "Godoy Cruz"),
+            "Normales" to listOf("San Lorenzo", "Godoy Cruz", "Lanus"),
             "Mediocres" to listOf("Platense", "Arsenal de Sarandí")
         ),
         "Bundesliga" to mapOf(
@@ -43,6 +43,12 @@ object Ligas {
             "Grandes" to listOf("Santos", "Corinthians"),
             "Normales" to listOf("Fluminense", "Internacional"),
             "Mediocres" to listOf("Cuiabá", "Goias")
-        )
+        ),
+        "Liga Roth" to mapOf(
+            "Gigantes" to listOf("Atletico Boyaro", "Mandarina CF"),
+            "Grandes" to listOf("Sportivo Ricardo", "Mountyfro"),
+            "Normales" to listOf("Boyerton", "Manson Palace"),
+            "Mediocres" to listOf("K FC", "Yosantos", "Atlas", "Facu FC")
+        ),
     )
 }
