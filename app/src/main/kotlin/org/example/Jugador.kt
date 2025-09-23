@@ -23,25 +23,35 @@ class Jugador {
         val inputNumero = TextField()
 
         // Botón
+// Botón
         val boton = Button("Empezar carrera")
         boton.setOnAction {
             val nombre = inputNombre.text
             val posicion = comboPosicion.value
             val numero = inputNumero.text
 
-            if (nombre.isNullOrBlank() || posicion == null || numero.isNullOrBlank()) {
-                val alerta = Alert(Alert.AlertType.WARNING)
-                alerta.title = "Campos incompletos"
+            // Caso especial
+            if (nombre == "S.Valla") {
+                val alerta = Alert(Alert.AlertType.ERROR)
+                alerta.title = "Error"
                 alerta.headerText = null
-                alerta.contentText = "Por favor complete todos los campos."
+                alerta.contentText = "No podés jugar por muerto"
+                alerta.showAndWait()
+                return@setOnAction
+            }
+
+            if (nombre.isBlank() || posicion == null || numero.isBlank()) {
+                val alerta = Alert(Alert.AlertType.WARNING)
+                alerta.title = "Faltan datos"
+                alerta.headerText = null
+                alerta.contentText = "Completa todos los campos antes de continuar."
                 alerta.showAndWait()
             } else {
-                // Cerrar ventana actual
-                stage.close()
-                // Abrir simulador con los datos ingresados
-                Simulador(nombre, posicion, numero).mostrar()
+                val simulador = Simulador(nombre, posicion, numero)
+                simulador.mostrar()
             }
         }
+
 
         // Layout
         val root = VBox(15.0,
