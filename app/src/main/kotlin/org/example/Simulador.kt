@@ -28,6 +28,15 @@ class Simulador(
     // Historial de trofeos
     private val historialTrofeos = mutableListOf<String>()
 
+    // 📌 Estadísticas de carrera acumuladas
+    private var golesTotales = 0
+    private var asistenciasTotales = 0
+    private var amarillasTotales = 0
+    private var rojasTotales = 0
+    private var partidosTotales = 0
+    private val equiposJugados = mutableListOf<String>()
+    private val trofeosTotales = mutableListOf<String>()
+
     fun mostrar() {
         val stage = Stage()
 
@@ -46,6 +55,23 @@ class Simulador(
         val boton = Button("Próxima temporada")
         boton.setOnAction {
             simularTemporada()
+
+            // 📌 Acumular estadísticas de carrera
+            golesTotales += goles
+            asistenciasTotales += asistencias
+            amarillasTotales += amarillas
+            rojasTotales += rojas
+            partidosTotales += partidos
+            equiposJugados.add(equipo) // cuenta una temporada en ese club
+
+
+            // Generar trofeos
+            val trofeos = Trofeos.generarTrofeos(nombre, posicion, goles, asistencias, equipo, liga, valorMercado)
+            historialTrofeos.add("📅 Temporada ${temporadaActual - 1}/${temporadaActual}:")
+            historialTrofeos.addAll(trofeos)
+            trofeosTotales.addAll(trofeos)
+
+            // Actualizar labels
             labelEdad.text = "Edad: $edad"
             labelTemporada.text = "Temporada: ${temporadaActual}/${temporadaActual + 1}"
             labelStats.text = "Estadísticas: Goles $goles, Asistencias $asistencias, Amarillas $amarillas, Rojas $rojas, Partidos $partidos"
@@ -53,19 +79,36 @@ class Simulador(
             labelPuesto.text = "Puesto en el equipo: $puesto"
             labelValor.text = "Valor de mercado: €${String.format("%,.0f", valorMercado)}"
 
-            // Generar trofeos
-            val trofeos = Trofeos.generarTrofeos(nombre, posicion, goles, asistencias, equipo, liga, valorMercado)
-
-            // Guardar en historial
-            historialTrofeos.add("📅 Temporada ${temporadaActual - 1}/${temporadaActual}:")
-            historialTrofeos.addAll(trofeos)
-
-            // Mostrar trofeos de esta temporada
+            // Mostrar trofeos de la temporada
             val alertaTrofeos = Alert(Alert.AlertType.INFORMATION)
             alertaTrofeos.title = "Trofeos de la temporada"
             alertaTrofeos.headerText = "Temporada ${temporadaActual - 1}/${temporadaActual} finalizada"
-            alertaTrofeos.contentText = trofeos.joinToString("\n")
+            alertaTrofeos.contentText = if (trofeos.isEmpty()) "No ganaste trofeos" else trofeos.joinToString("\n")
             alertaTrofeos.showAndWait()
+
+            // 📌 Revisar retiro manual y automático
+            if (edad >= 30 && root.children.none { it is Button && it.text == "Retiro" }) {
+                val botonRetiro = Button("Retiro")
+                botonRetiro.setOnAction {
+                    val retiro = Retiro(
+                        nombre, posicion, numero,
+                        golesTotales, asistenciasTotales, amarillasTotales, rojasTotales,
+                        partidosTotales, trofeosTotales, equiposJugados
+                    )
+                    retiro.mostrar()
+                    stage.close()
+                }
+                root.children.add(botonRetiro)
+            }
+            if (edad >= 48) {
+                val retiro = Retiro(
+                    nombre, posicion, numero,
+                    golesTotales, asistenciasTotales, amarillasTotales, rojasTotales,
+                    partidosTotales, trofeosTotales, equiposJugados
+                )
+                retiro.mostrar()
+                stage.close()
+            }
         }
 
         // Botón cambiar de equipo
@@ -119,7 +162,7 @@ class Simulador(
         }
 
         // Layout
-        val root = VBox(
+        root = VBox(
             12.0,
             labelNombre, labelPosicion, labelNumero,
             labelEdad, labelTemporada,
@@ -160,7 +203,7 @@ class Simulador(
         rojas = if (amarillas > 4 && Random.nextDouble() < 0.3) 1 else 0
         partidos = Random.nextInt(0, 60)
 
-        puesto = when (Random.nextInt(0,2)) {
+        puesto = when (Random.nextInt(0, 2)) {
             0 -> "Titular"
             1 -> "Suplente"
             else -> "Reserva"
@@ -188,5 +231,9 @@ class Simulador(
             else -> ofertas.addAll(Equipos.mediocres.shuffled().take(2))
         }
         return ofertas
+    }
+
+    companion object {
+        private lateinit var root: VBox
     }
 }
