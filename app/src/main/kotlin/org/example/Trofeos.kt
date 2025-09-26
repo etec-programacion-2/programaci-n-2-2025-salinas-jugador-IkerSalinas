@@ -40,7 +40,7 @@ object Trofeos {
             } else if (Random.nextDouble() < 0.05) {
                 trofeos.add("⚽ Conference League con $equipo")
             }
-        } else if (liga in listOf("Liga Argentina", "Brasileirao")) {
+        } else if (liga in listOf("Liga Argentina", "Brasileirao", "Liga Roth")) {
             val chanceLibertadores = if (equipo in Equipos.gigantes) 0.25 else 0.1
             if (Random.nextDouble() < chanceLibertadores) {
                 trofeos.add("🏆 Copa Libertadores con $equipo")
@@ -61,12 +61,12 @@ object Trofeos {
         // -----------------------------
         // Premios individuales
         // -----------------------------
-        if (posicion == "Delantero" && goles >= 20 && Random.nextDouble() < 0.5) {
+        if (posicion == "Delantero" && goles >= 30 && Random.nextDouble() < 0.5) {
             trofeos.add("🥇 Bota de Oro (máximo goleador)")
         }
 
         val impacto = goles + asistencias
-        if (impacto > 25 && valorMercado > 80_000_000 && Random.nextDouble() < 0.15) {
+        if (impacto > 30 && valorMercado > 80_000_000 && Random.nextDouble() < 0.15) {
             trofeos.add("🏆 Balón de Oro")
         }
 
