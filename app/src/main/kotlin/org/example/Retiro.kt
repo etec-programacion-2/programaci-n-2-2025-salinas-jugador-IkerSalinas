@@ -16,14 +16,23 @@ class Retiro(
     private val rojasTotales: Int,
     private val partidosTotales: Int,
     private val trofeos: List<String>,
-    private val equipos: List<String>
-) {
+    private val equipos: List<String>,
+    private val lesionesTotales: Int,
+    private val partidosPerdidosLesion: Int
+
+    ) {
     fun mostrar() {
         val stage = Stage()
         stage.title = "Retiro de $nombre"
 
         val labelTitulo = Label("🏆 Carrera de $nombre finalizada")
         val labelPosicion = Label("Posición: $posicion | Camiseta: $numero")
+        val labelLesiones = Label(
+            "Historial de lesiones:\n" +
+                    "Lesiones totales: $lesionesTotales\n" +
+                    "Partidos perdidos por lesión: $partidosPerdidosLesion"
+        )
+
         val labelEstadisticas = Label(
             """
             Estadísticas de carrera:
@@ -57,7 +66,7 @@ class Retiro(
                     else equiposAgrupados.joinToString("\n")
         )
 
-        val layout = VBox(10.0, labelTitulo, labelPosicion, labelEstadisticas, labelTrofeos, labelEquipos)
+        val layout = VBox(10.0, labelTitulo, labelPosicion, labelEstadisticas, labelTrofeos, labelEquipos, labelLesiones)
         layout.spacing = 12.0
 
         val scene = Scene(layout, 400.0, 520.0)

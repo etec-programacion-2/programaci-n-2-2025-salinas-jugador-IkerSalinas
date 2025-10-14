@@ -25,6 +25,8 @@ class Simulador(
     private var equipo = "Club Atlético Inicial"
     private var liga = "Liga Argentina"
 
+
+
     // Historial de trofeos
     private val historialTrofeos = mutableListOf<String>()
 
@@ -36,7 +38,12 @@ class Simulador(
     private var partidosTotales = 0
     private val equiposJugados = mutableListOf<String>()
     private val trofeosTotales = mutableListOf<String>()
-
+    private var lesionesTotales = 0
+    private var partidosPerdidosPorLesion = 0
+    private var enPrestamo = false
+    private var temporadasRestantesPrestamo = 0
+    private var equipoPrestamo: String? = null
+    private var equipoOriginal: String? = null
     fun mostrar() {
         val stage = Stage()
 
@@ -54,8 +61,31 @@ class Simulador(
         // Botón próxima temporada
         val boton = Button("Próxima temporada")
         boton.setOnAction {
-            simularTemporada()
+            val evento = Eventos.generarEvento(equipo, posicion)
+            if (evento.prestamoEquipo != null && !enPrestamo) {
+                equipoOriginal = equipo  // 🔹 Guardamos el equipo que te presta
+                enPrestamo = true
+                temporadasRestantesPrestamo = evento.temporadasPrestamo
+                equipoPrestamo = evento.prestamoEquipo
+                equipo = "${evento.prestamoEquipo} (préstamo)"
+            }
 
+            if (evento.lesionOcurrida) {
+                lesionesTotales++
+                partidosPerdidosPorLesion += evento.lesionPartidosPerdidos
+                goles = (goles * 0.8).toInt()
+                asistencias = (asistencias * 0.8).toInt()
+                partidos = (partidos - evento.lesionPartidosPerdidos).coerceAtLeast(0)
+            }
+
+            if (evento.prestamoEquipo != null && !enPrestamo) {
+                enPrestamo = true
+                temporadasRestantesPrestamo = evento.temporadasPrestamo
+                equipoPrestamo = evento.prestamoEquipo
+                equipo = "${evento.prestamoEquipo} (préstamo)"
+            }
+
+            simularTemporada()
             // 📌 Acumular estadísticas de carrera
             golesTotales += goles
             asistenciasTotales += asistencias
@@ -93,8 +123,10 @@ class Simulador(
                     val retiro = Retiro(
                         nombre, posicion, numero,
                         golesTotales, asistenciasTotales, amarillasTotales, rojasTotales,
-                        partidosTotales, trofeosTotales, equiposJugados
+                        partidosTotales, trofeosTotales, equiposJugados,
+                        lesionesTotales, partidosPerdidosPorLesion
                     )
+
                     retiro.mostrar()
                     stage.close()
                 }
@@ -104,8 +136,10 @@ class Simulador(
                 val retiro = Retiro(
                     nombre, posicion, numero,
                     golesTotales, asistenciasTotales, amarillasTotales, rojasTotales,
-                    partidosTotales, trofeosTotales, equiposJugados
+                    partidosTotales, trofeosTotales, equiposJugados,
+                    lesionesTotales, partidosPerdidosPorLesion
                 )
+
                 retiro.mostrar()
                 stage.close()
             }
@@ -215,6 +249,29 @@ class Simulador(
         if (puesto == "Titular") valorMercado *= 1.1
         if (edad > 30) valorMercado *= 0.9
         if (valorMercado < 100_000) valorMercado = 100_000.0
+        if (enPrestamo) {
+            temporadasRestantesPrestamo--
+            if (temporadasRestantesPrestamo <= 0) {
+                val comprado = Eventos.evaluarCompraPrestamo(goles + asistencias, true)
+                if (comprado) {
+                    equipo = equipoPrestamo!!.replace(" (préstamo)", "")
+                    val alerta = Alert(Alert.AlertType.INFORMATION)
+                    alerta.title = "Traspaso definitivo"
+                    alerta.headerText = "¡Compra definitiva!"
+                    alerta.contentText = "El club $equipo te compró tras el préstamo."
+                    alerta.showAndWait()
+                } else {
+                    equipo = equipoOriginal ?: "Club Atlético Inicial"
+                    val alerta = Alert(Alert.AlertType.INFORMATION)
+                    alerta.title = "Fin del préstamo"
+                    alerta.headerText = "Regresaste a tu club original"
+                    alerta.contentText = "Volviste a jugar con $equipo."
+                    alerta.showAndWait()
+                }
+                enPrestamo = false
+                equipoPrestamo = null
+            }
+        }
     }
 
     // -------------------------------
