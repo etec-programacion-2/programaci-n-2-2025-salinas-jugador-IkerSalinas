@@ -19,6 +19,13 @@ class Simulador(
     private var asistencias = 0
     private var amarillas = 0
     private var rojas = 0
+    private var paradas = 0
+    private var golesContra = 0
+    private var porteriasCero = 0
+    private var robos = 0
+    private var golesEvitados = 0
+    private var pases = 0
+    private var pasesClaves = 0
     private var partidos = 0
     private var puesto = "Reserva"
     private var valorMercado = 1_000_000.0
@@ -104,7 +111,12 @@ class Simulador(
             // Actualizar labels
             labelEdad.text = "Edad: $edad"
             labelTemporada.text = "Temporada: ${temporadaActual}/${temporadaActual + 1}"
-            labelStats.text = "Estadísticas: Goles $goles, Asistencias $asistencias, Amarillas $amarillas, Rojas $rojas, Partidos $partidos"
+            when (posicion) {
+                "Arquero" -> labelStats.text = "Paradas: $paradas | Goles en contra: $golesContra | Porterías a cero: $porteriasCero"
+                "Defensa" -> labelStats.text = "Robos: $robos | Goles evitados: $golesEvitados | Amarillas: $amarillas | Rojas: $rojas"
+                "Medio" -> labelStats.text = "Pases: $pases | Pases clave: $pasesClaves | Asistencias: $asistencias | Goles: $goles | Rojas: $rojas"
+                else -> labelStats.text = "Goles: $goles | Asistencias: $asistencias | Amarillas: $amarillas | Rojas: $rojas"
+            }
             labelEquipo.text = "Equipo: $equipo | Liga: $liga"
             labelPuesto.text = "Puesto en el equipo: $puesto"
             labelValor.text = "Valor de mercado: €${String.format("%,.0f", valorMercado)}"
@@ -218,24 +230,59 @@ class Simulador(
         temporadaActual += 1
         edad += 1
 
-        // Stats base según posición
-        goles = when (posicion) {
-            "Delantero" -> Random.nextInt(0, 50)
-            "Medio" -> Random.nextInt(0, 30)
-            "Defensa" -> Random.nextInt(0, 10)
-            "Arquero" -> if (Random.nextInt(0, 100) < 2) 1 else 0
-            else -> 0
+        when (posicion) {
+            "Arquero" -> {
+                paradas = Random.nextInt(40, 150)
+                golesContra = Random.nextInt(20, 80)
+                porteriasCero = Random.nextInt(0, 25)
+                goles = Random.nextInt(0, 2)
+                asistencias = Random.nextInt(0, 7)
+                amarillas = Random.nextInt(0, 7)
+                rojas = Random.nextInt(0,4)
+                partidos = Random.nextInt(0, 45)
+
+            }
+
+            "Defensa" -> {
+                robos = Random.nextInt(20, 100)
+                golesEvitados = Random.nextInt(0, 30)
+                goles = Random.nextInt(0, 15)
+                asistencias = Random.nextInt(0, 20)
+                amarillas = Random.nextInt(0, 16)
+                rojas = Random.nextInt(0,9)
+                partidos = Random.nextInt(0, 45)
+
+            }
+
+            "Medio" -> {
+                pases = Random.nextInt(300, 1000)
+                pasesClaves = Random.nextInt(0, 60)
+                goles = Random.nextInt(0, 30)
+                asistencias = Random.nextInt(0, 50)
+                amarillas = Random.nextInt(0, 9)
+                rojas = Random.nextInt(0,5)
+                partidos = Random.nextInt(0, 45)
+
+            }
+
+            "Delantero" -> {
+                goles = Random.nextInt(0, 50)
+                asistencias = Random.nextInt(0, 30)
+                amarillas = Random.nextInt(0, 8)
+                rojas = Random.nextInt(0,4)
+                partidos = Random.nextInt(0, 45)
+
+            }
+
+            else -> {
+                goles = Random.nextInt(0, 10)
+                asistencias = Random.nextInt(0, 10)
+                amarillas = Random.nextInt(0, 5)
+                rojas = if (Random.nextDouble() < 0.1) 1 else 0
+                partidos = Random.nextInt(20, 45)
+
+            }
         }
-        asistencias = when (posicion) {
-            "Delantero" -> Random.nextInt(0, 30)
-            "Medio" -> Random.nextInt(0, 50)
-            "Defensa" -> Random.nextInt(0, 20)
-            "Arquero" -> Random.nextInt(0, 10)
-            else -> 0
-        }
-        amarillas = Random.nextInt(0, 15)
-        rojas = if (amarillas > 4 && Random.nextDouble() < 0.3) 1 else 0
-        partidos = Random.nextInt(0, 60)
 
         puesto = when (Random.nextInt(0, 2)) {
             0 -> "Titular"
@@ -244,8 +291,47 @@ class Simulador(
         }
 
         // Ajuste de valor de mercado
-        val rendimiento = goles * 5 + asistencias * 3 - amarillas - rojas * 2
-        valorMercado += rendimiento * 100_000
+        val rendimiento = when (posicion) {
+
+            // 🧤 ARQUERO
+            "Arquero" -> {
+                // paradas buenas, porterías a cero aumentan valor, goles en contra lo bajan
+                val puntaje = (paradas / 2) + (porteriasCero * 4) - (golesContra / 3) - (amarillas * 2) - (rojas * 5)
+                valorMercado += puntaje * 80_000
+                puntaje
+            }
+
+            // 🛡️ DEFENSA
+            "Defensa" -> {
+                val puntaje = (robos * 2) + (golesEvitados * 3) + (goles * 10) + (asistencias * 5) -
+                        (amarillas * 3) - (rojas * 8)
+                valorMercado += puntaje * 90_000
+                puntaje
+            }
+
+            // ⚙️ MEDIOCAMPISTA
+            "Medio" -> {
+                val puntaje = (pases / 10) + (pasesClaves * 3) + (asistencias * 10) + (goles * 8) -
+                        (amarillas * 2) - (rojas * 5)
+                valorMercado += puntaje * 100_000
+                puntaje
+            }
+
+            // 🎯 DELANTERO
+            "Delantero" -> {
+                val puntaje = (goles * 12) + (asistencias * 6) - (amarillas * 3) - (rojas * 8)
+                valorMercado += puntaje * 120_000
+                puntaje
+            }
+
+            // 🔘 Por defecto
+            else -> {
+                val puntaje = (goles * 5) + (asistencias * 3) - amarillas - (rojas * 2)
+                valorMercado += puntaje * 100_000
+                puntaje
+            }
+        }
+
         if (puesto == "Titular") valorMercado *= 1.1
         if (edad > 30) valorMercado *= 0.9
         if (valorMercado < 100_000) valorMercado = 100_000.0
@@ -279,17 +365,69 @@ class Simulador(
     // -------------------------------
     private fun generarOfertas(): List<String> {
         val ofertas = mutableListOf<String>()
-        val rendimiento = goles + asistencias - rojas
 
+        // ⚙️ Escala de rendimiento realista (máx ≈ 150)
+        val rendimiento: Double = when (posicion) {
+
+            // 🧤 ARQUERO
+            "Arquero" -> {
+                val paradasPonderado = (paradas / 2.0).coerceAtMost(75.0)          // hasta 150 paradas = 75 pts
+                val porteriasCeroPonderado = (porteriasCero * 4.0).coerceAtMost(60.0) // hasta 15 clean sheets = 60 pts
+                val golesContraPenaliza = (golesContra / 5.0).coerceAtMost(30.0)
+                paradasPonderado + porteriasCeroPonderado - golesContraPenaliza
+            }
+
+            // 🛡️ DEFENSA
+            "Defensa" -> {
+                val robosPonderado = (robos * 0.8).coerceAtMost(80.0)
+                val golesEvitadosPonderado = (golesEvitados * 2.0).coerceAtMost(40.0)
+                val golesYAsistencias = ((goles * 5) + (asistencias * 3)).toDouble().coerceAtMost(20.0)
+                val tarjetasPenaliza = ((amarillas * 1.5) + (rojas * 5)).coerceAtMost(30.0)
+                robosPonderado + golesEvitadosPonderado + golesYAsistencias - tarjetasPenaliza
+            }
+
+            // ⚙️ MEDIOCAMPISTA
+            "Medio" -> {
+                val pasesPonderado = (pases / 20.0).coerceAtMost(50.0)
+                val pasesClavesPonderado = (pasesClaves * 2.0).coerceAtMost(40.0)
+                val aporteOfensivo = ((asistencias * 4) + (goles * 6)).toDouble().coerceAtMost(50.0)
+                val tarjetasPenaliza = ((amarillas * 2) + (rojas * 6)).toDouble().coerceAtMost(30.0)
+                pasesPonderado + pasesClavesPonderado + aporteOfensivo - tarjetasPenaliza
+            }
+
+            // 🎯 DELANTERO
+            "Delantero" -> {
+                val golesPonderado = (goles * 3.0).coerceAtMost(90.0)
+                val asistenciasPonderado = (asistencias * 3.0).coerceAtMost(45.0)
+                val tarjetasPenaliza = ((amarillas * 2) + (rojas * 5)).toDouble().coerceAtMost(30.0)
+                golesPonderado + asistenciasPonderado - tarjetasPenaliza
+            }
+
+            else -> {
+                ((goles * 5) + (asistencias * 3) - amarillas - (rojas * 2)).toDouble()
+            }
+        }
+
+        // 📊 Clasificación del rendimiento
+        val categoria = when {
+            rendimiento >= 90 -> "Temporada espectacular 🔥"
+            rendimiento >= 60 -> "Temporada muy buena 💪"
+            rendimiento >= 30 -> "Temporada aceptable ⚙️"
+            else -> "Temporada floja 😬"
+        }
+
+        println("Rendimiento: ${rendimiento.toInt()} pts ($categoria)")
+
+        // 📈 Ofertas según rendimiento
         when {
-            rendimiento > 50 -> ofertas.addAll(Equipos.gigantes.shuffled().take(2))
-            rendimiento > 30 -> ofertas.addAll(Equipos.grandes.shuffled().take(2))
-            rendimiento > 15 -> ofertas.addAll(Equipos.normales.shuffled().take(2))
+            rendimiento >= 90 -> ofertas.addAll(Equipos.gigantes.shuffled().take(2))
+            rendimiento >= 60 -> ofertas.addAll(Equipos.grandes.shuffled().take(2))
+            rendimiento >= 30 -> ofertas.addAll(Equipos.normales.shuffled().take(2))
             else -> ofertas.addAll(Equipos.mediocres.shuffled().take(2))
         }
+
         return ofertas
     }
-
     companion object {
         private lateinit var root: VBox
     }
