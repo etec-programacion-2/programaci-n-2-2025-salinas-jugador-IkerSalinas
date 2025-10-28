@@ -14,13 +14,17 @@ class Inicio : Application() {
 
         val button = Button("Ir a Jugador")
         button.setOnAction {
-            // Cierra la ventana actual
             primaryStage.close()
-            // Abre la nueva ventana de Jugador
             Jugador().mostrar()
         }
 
-        val root = VBox(20.0, label, button)
+        // Botón que abre la ventana con checklist
+        val botonChecklist = Button("Opciones")
+        botonChecklist.setOnAction {
+            Opciones().mostrar()
+        }
+
+        val root = VBox(20.0, label, button, botonChecklist)
         root.alignment = Pos.CENTER
 
         val scene = Scene(root, 400.0, 300.0)
