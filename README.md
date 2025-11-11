@@ -1,5 +1,6 @@
 Iker Salinas
 
+# Para ejecutarlo poner en la terminal ./gradlew run despues de clonar el repositorio
 
 # ⚽ Simulador de Carrera de Futbolista (Kotlin + JavaFX)
 
