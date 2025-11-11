@@ -10,10 +10,10 @@ El objetivo es simular la carrera completa de un jugador de fútbol: desde su de
 
 ## 🚀 Tecnologías utilizadas
 
-- **Lenguaje:** Kotlin  
-- **Interfaz gráfica:** JavaFX  
+- **Lenguaje:** Kotlin  v1.9.24
+- **Interfaz gráfica:** JavaFX  v21.0.2
 - **Entorno de desarrollo:** IntelliJ IDEA  
-- **Sistema de compilación:** Gradle  
+- **Sistema de compilación:** Gradle v8.7  
 - **Arquitectura modular:** cada pantalla o sistema en su propio archivo `.kt`
 
 ---
